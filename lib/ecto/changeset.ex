@@ -455,9 +455,22 @@ defmodule Ecto.Changeset do
       Enum.map_reduce(required, {changes, errors, valid?},
                       &process_param(&1, :required, params, types, data, empty_values, defaults, &2))
 
+    notify_unpermitted_keys(params, optional, required)
+
     %Changeset{params: params, data: data, valid?: valid?,
                errors: Enum.reverse(errors), changes: changes, required: required,
                types: types, empty_values: empty_values}
+  end
+
+  defp check_unpermitted_keys(params, optional, required) do
+    permitted_keys = Enum.map(optional -- required, fn
+      atom_key when is_atom(atom_key) ->
+        Atom.to_string(atom_key)
+      atom_key ->
+        atom_key
+    end)
+    unpermitted_keys = Map.keys(params) -- permitted_keys
+    IO.puts "Keys: #{inspect unpermitted_keys}"
   end
 
   defp do_cast(%{}, %{}, %{}, params, required, optional, _empty_values)
